@@ -6,7 +6,7 @@
     <title>DIGIWISE 2026 | Modern Admin Command Center</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter & Fredoka -->
+    <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- SheetJS for Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -69,14 +69,14 @@
         </div>
     </div>
 
-    <!-- CUSTOM CONFIRMATION MODAL -->
+    <!-- CUSTOM CONFIRMATION & ALERT MODAL -->
     <div id="customModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden px-4">
         <div class="bg-cardBg border border-gray-800 p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-4">
             <h3 id="modalTitle" class="text-sm font-bold text-yellow-400 tracking-wide uppercase">System Warning</h3>
             <p id="modalMessage" class="text-xs text-gray-300 leading-relaxed">Are you sure?</p>
             <div id="modalButtons" class="flex justify-end gap-3 pt-2">
                 <button id="modalConfirmBtn" class="bg-red-600 hover:bg-red-500 text-white text-xs font-medium py-2 px-4 rounded-lg transition-colors">Confirm</button>
-                <button onclick="closeModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium py-2 px-4 rounded-lg transition-colors">Cancel</button>
+                <button id="modalCancelBtn" onclick="closeModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium py-2 px-4 rounded-lg transition-colors">Cancel</button>
             </div>
         </div>
     </div>
@@ -135,7 +135,7 @@
                     <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/10">
                         <span>📊</span> Export Excel
                     </button>
-                    <button onclick="location.reload()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-xs font-semibold px-4 py-2.5 rounded-lg transition-all">
+                    <button onclick="handleLogout()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-xs font-semibold px-4 py-2.5 rounded-lg transition-all">
                         Logout
                     </button>
                 </div>
@@ -211,6 +211,16 @@
 
         let globalRegistrations = [];
 
+        // Check if session exists on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const loggedIn = localStorage.getItem('digiwise_admin_auth');
+            if (loggedIn === 'true') {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                loadRegistrations();
+            }
+        });
+
         // Authentication Handler
         window.handleLogin = function(e) {
             e.preventDefault();
@@ -218,12 +228,19 @@
             const pass = document.getElementById('adminPass').value.trim();
 
             if (user === "DIGIWISEPASOA" && pass === "2026") {
+                localStorage.setItem('digiwise_admin_auth', 'true');
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('adminDashboard').classList.remove('hidden');
                 loadRegistrations();
             } else {
                 alert("Invalid username or password credentials.");
             }
+        };
+
+        // Logout Handler
+        window.handleLogout = function() {
+            localStorage.removeItem('digiwise_admin_auth');
+            location.reload();
         };
 
         // Load Firestore Data Real-time
@@ -248,7 +265,6 @@
 
             document.getElementById('totalCount').innerText = data.length;
 
-            // Advanced Multi-Field Duplicate Detector (Checks Student ID & Email matches)
             const idMap = {};
             const emailMap = {};
 
@@ -354,17 +370,21 @@
             }
         };
 
-        // Delete with Warning
+        // Delete Controls
         window.confirmDelete = function(docId, playerName) {
             document.getElementById('modalTitle').innerText = "⚠️ Confirm Deletion";
             document.getElementById('modalMessage').innerHTML = `Are you sure you want to permanently delete registration for <strong class="text-white">${playerName}</strong>? This action cannot be undone.`;
             
+            // Ensure confirm button is visible
             const confirmBtn = document.getElementById('modalConfirmBtn');
+            const cancelBtn = document.getElementById('modalCancelBtn');
+            confirmBtn.classList.remove('hidden');
+            cancelBtn.classList.remove('hidden');
+
             confirmBtn.onclick = async function() {
                 try {
                     await deleteDoc(doc(db, "registrations", docId));
                     closeModal();
-                    showSystemAlert("Deleted", "Player record has been removed.");
                 } catch (err) {
                     console.error("Delete error:", err);
                     alert("Failed to delete: " + err.message);
@@ -380,7 +400,18 @@
         function showSystemAlert(title, message) {
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalMessage').innerText = message;
-            document.getElementById('modalButtons').innerHTML = `<button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium py-2 px-4 rounded-lg">OK</button>`;
+            
+            // Hide delete confirm button for simple alerts
+            document.getElementById('modalConfirmBtn').classList.add('hidden');
+            const cancelBtn = document.getElementById('modalCancelBtn');
+            cancelBtn.innerText = "OK";
+            cancelBtn.onclick = function() {
+                closeModal();
+                // Reset cancel button text and behavior
+                cancelBtn.innerText = "Cancel";
+                cancelBtn.onclick = closeModal;
+            };
+
             document.getElementById('customModal').classList.remove('hidden');
         }
 
