@@ -160,11 +160,26 @@
                 </div>
             </div>
 
-            <!-- Search Bar -->
-            <div class="flex flex-col sm:flex-row gap-3">
-                <div class="relative w-full">
+            <!-- Search and Filter Bar -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <!-- Search Box -->
+                <div class="relative md:col-span-2">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">🔍</span>
-                    <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search by name, student ID, course, or email..." class="w-full bg-cardBg/80 border border-gray-800 pl-10 pr-4 py-3 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                    <input type="text" id="searchInput" onkeyup="applyFilters()" placeholder="Search by name, student ID, course, or email..." class="w-full bg-cardBg/80 border border-gray-800 pl-10 pr-4 py-3 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                </div>
+                <!-- Sort Filter -->
+                <div>
+                    <select id="sortFilter" onchange="applyFilters()" class="w-full bg-cardBg/80 border border-gray-800 px-4 py-3 rounded-xl text-sm text-gray-300 focus:outline-none focus:border-blue-500 transition-colors">
+                        <option value="latest">Sort: Latest First (Default)</option>
+                        <option value="oldest">Sort: Oldest First</option>
+                        <option value="az">Alphabetical: A to Z</option>
+                        <option value="za">Alphabetical: Z to A</option>
+                    </select>
+                </div>
+                <!-- Date Filter -->
+                <div class="flex gap-2">
+                    <input type="date" id="dateFilter" onchange="applyFilters()" class="w-full bg-cardBg/80 border border-gray-800 px-4 py-3 rounded-xl text-sm text-gray-300 focus:outline-none focus:border-blue-500 transition-colors">
+                    <button onclick="resetFilters()" title="Reset Filters" class="bg-gray-800 hover:bg-gray-700 px-3.5 py-3 rounded-xl text-xs text-gray-300 transition-colors">🔄</button>
                 </div>
             </div>
 
@@ -180,6 +195,7 @@
                                 <th class="p-4">Contact Details</th>
                                 <th class="p-4">Student ID</th>
                                 <th class="p-4">Course & Section</th>
+                                <th class="p-4">Registration Date & Time</th>
                                 <th class="p-4 text-center">Actions</th>
                             </tr>
                         </thead>
@@ -252,23 +268,77 @@
                     regs.push({ id: docSnap.id, ...docSnap.data() });
                 });
                 globalRegistrations = regs;
-                renderTable(regs);
+                applyFilters();
             }, (error) => {
                 console.error("Firestore sync error:", error);
             });
         }
+
+        // Apply Search, Sorting, and Date Filters
+        window.applyFilters = function() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const sortOption = document.getElementById('sortFilter').value;
+            const selectedDate = document.getElementById('dateFilter').value;
+
+            // 1. Filter by Search Query & Date
+            let filtered = globalRegistrations.filter(r => {
+                const matchesSearch = 
+                    (r.playerName && r.playerName.toLowerCase().includes(searchQuery)) ||
+                    (r.studentID && r.studentID.toLowerCase().includes(searchQuery)) ||
+                    (r.courseAndSection && r.courseAndSection.toLowerCase().includes(searchQuery)) ||
+                    (r.playerEmail && r.playerEmail.toLowerCase().includes(searchQuery));
+
+                let matchesDate = true;
+                if (selectedDate && r.registeredAt) {
+                    const regDate = new Date(r.registeredAt.seconds * 1000).toISOString().split('T')[0];
+                    matchesDate = (regDate === selectedDate);
+                } else if (selectedDate && !r.registeredAt) {
+                    matchesDate = false;
+                }
+
+                return matchesSearch && matchesDate;
+            });
+
+            // 2. Sort Data
+            filtered.sort((a, b) => {
+                const timeA = a.registeredAt ? a.registeredAt.seconds : 0;
+                const timeB = b.registeredAt ? b.registeredAt.seconds : 0;
+                const nameA = (a.playerName || "").toLowerCase();
+                const nameB = (b.playerName || "").toLowerCase();
+
+                if (sortOption === 'latest') {
+                    return timeB - timeA; // Latest first
+                } else if (sortOption === 'oldest') {
+                    return timeA - timeB; // Oldest first
+                } else if (sortOption === 'az') {
+                    return nameA.localeCompare(nameB); // A-Z
+                } else if (sortOption === 'za') {
+                    return nameB.localeCompare(nameA); // Z-A
+                }
+                return 0;
+            });
+
+            renderTable(filtered);
+        };
+
+        window.resetFilters = function() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('sortFilter').value = 'latest';
+            document.getElementById('dateFilter').value = '';
+            applyFilters();
+        };
 
         // Render Data Table & Advanced Duplicate Detector
         function renderTable(data) {
             const tbody = document.getElementById('registrationsTableBody');
             tbody.innerHTML = "";
 
-            document.getElementById('totalCount').innerText = data.length;
+            document.getElementById('totalCount').innerText = globalRegistrations.length;
 
             const idMap = {};
             const emailMap = {};
 
-            data.forEach(item => {
+            globalRegistrations.forEach(item => {
                 const sId = (item.studentID || "").trim().toLowerCase();
                 const email = (item.playerEmail || "").trim().toLowerCase();
                 if (sId) idMap[sId] = (idMap[sId] || 0) + 1;
@@ -276,10 +346,17 @@
             });
 
             let duplicateCounter = 0;
+            globalRegistrations.forEach(reg => {
+                const sId = (reg.studentID || "").trim().toLowerCase();
+                const email = (reg.playerEmail || "").trim().toLowerCase();
+                if ((sId && idMap[sId] > 1) || (email && emailMap[email] > 1)) {
+                    duplicateCounter++;
+                }
+            });
+            document.getElementById('duplicateCount').innerText = duplicateCounter;
 
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-500 text-xs">No registrations found in database.</td></tr>`;
-                document.getElementById('duplicateCount').innerText = "0";
+                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-gray-500 text-xs">No matching registrations found.</td></tr>`;
                 return;
             }
 
@@ -291,7 +368,14 @@
                 const isDuplicateEmail = email && emailMap[email] > 1;
                 const isDuplicate = isDuplicateID || isDuplicateEmail;
 
-                if (isDuplicate) duplicateCounter++;
+                // Format timestamp
+                let formattedDate = 'N/A';
+                if (reg.registeredAt && reg.registeredAt.seconds) {
+                    formattedDate = new Date(reg.registeredAt.seconds * 1000).toLocaleString('en-US', {
+                        month: 'short', day: 'numeric', year: 'numeric',
+                        hour: 'numeric', minute: '2-digit', hour12: true
+                    });
+                }
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-800/40 transition-colors";
@@ -307,6 +391,7 @@
                     </td>
                     <td class="p-4 font-mono text-blue-400">${reg.studentID || 'N/A'}</td>
                     <td class="p-4 text-gray-300">${reg.courseAndSection || 'N/A'}</td>
+                    <td class="p-4 font-mono text-gray-400 text-[11px]">${formattedDate}</td>
                     <td class="p-4 text-center space-x-2 whitespace-nowrap">
                         <button onclick="openEditModal('${reg.id}', '${escapeAttr(reg.playerName)}', '${escapeAttr(reg.playerEmail)}', '${escapeAttr(reg.playerPhone)}', '${escapeAttr(reg.studentID)}', '${escapeAttr(reg.courseAndSection)}')" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 text-[11px] font-medium px-3 py-1.5 rounded-lg transition-colors">Edit</button>
                         <button onclick="confirmDelete('${reg.id}', '${escapeAttr(reg.playerName)}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-[11px] font-medium px-3 py-1.5 rounded-lg transition-colors">Delete</button>
@@ -314,25 +399,11 @@
                 `;
                 tbody.appendChild(tr);
             });
-
-            document.getElementById('duplicateCount').innerText = duplicateCounter;
         }
 
         function escapeAttr(str) {
             return (str || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;");
         }
-
-        // Live Search Filter
-        window.filterTable = function() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = globalRegistrations.filter(r => 
-                (r.playerName && r.playerName.toLowerCase().includes(query)) ||
-                (r.studentID && r.studentID.toLowerCase().includes(query)) ||
-                (r.courseAndSection && r.courseAndSection.toLowerCase().includes(query)) ||
-                (r.playerEmail && r.playerEmail.toLowerCase().includes(query))
-            );
-            renderTable(filtered);
-        };
 
         // Edit Controls
         window.openEditModal = function(id, name, email, phone, studentID, course) {
@@ -375,7 +446,6 @@
             document.getElementById('modalTitle').innerText = "⚠️ Confirm Deletion";
             document.getElementById('modalMessage').innerHTML = `Are you sure you want to permanently delete registration for <strong class="text-white">${playerName}</strong>? This action cannot be undone.`;
             
-            // Ensure confirm button is visible
             const confirmBtn = document.getElementById('modalConfirmBtn');
             const cancelBtn = document.getElementById('modalCancelBtn');
             confirmBtn.classList.remove('hidden');
@@ -401,13 +471,11 @@
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalMessage').innerText = message;
             
-            // Hide delete confirm button for simple alerts
             document.getElementById('modalConfirmBtn').classList.add('hidden');
             const cancelBtn = document.getElementById('modalCancelBtn');
             cancelBtn.innerText = "OK";
             cancelBtn.onclick = function() {
                 closeModal();
-                // Reset cancel button text and behavior
                 cancelBtn.innerText = "Cancel";
                 cancelBtn.onclick = closeModal;
             };
