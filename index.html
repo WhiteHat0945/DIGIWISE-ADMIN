@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DIGIWISE 2026 | Admin Control Center</title>
+    <title>DIGIWISE 2026 | Modern Admin Command Center</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Press Start 2P & Fredoka -->
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Inter & Fredoka -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- SheetJS for Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
@@ -15,91 +15,108 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        arcade: ['"Press Start 2P"', 'monospace'],
-                        fredoka: ['Fredoka', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif'],
                     },
                     colors: {
-                        arcadeDark: '#0a0612',
-                        arcadePurple: '#1d0c3d',
-                        arcadePink: '#ff007f',
-                        arcadeCyan: '#00f0ff',
-                        arcadeYellow: '#ffe600',
-                        brickRed: '#d92b2b',
-                        brickDark: '#991b1b',
-                    },
-                    boxShadow: {
-                        'neon-pink': '0 0 15px rgba(255, 0, 127, 0.7)',
-                        'neon-cyan': '0 0 15px rgba(0, 240, 255, 0.7)',
-                        'neon-yellow': '0 0 15px rgba(255, 230, 0, 0.7)',
+                        darkBg: '#090d16',
+                        cardBg: '#111827',
+                        accentBlue: '#3b82f6',
+                        accentPurple: '#8b5cf6',
                     }
                 }
             }
         }
     </script>
+    <style>
+        /* Color-Changing Hue Background Animation */
+        @keyframes hueShift {
+            0% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(60deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+        .animated-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #31103f 100%);
+            animation: hueShift 15s infinite alternate ease-in-out;
+        }
+    </style>
 </head>
-<body class="bg-arcadeDark text-white font-fredoka min-h-screen relative selection:bg-arcadePink selection:text-white">
+<body class="animated-bg text-gray-100 font-sans min-h-screen relative selection:bg-blue-500 selection:text-white">
 
     <!-- LOGIN SCREEN -->
-    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-arcadeDark/95 px-4">
-        <div class="bg-arcadePurple border-4 border-arcadeCyan p-8 rounded-3xl max-w-md w-full shadow-neon-cyan text-center space-y-6">
-            <div class="font-arcade text-arcadeYellow text-xs">🔒 RESTRICTED ACCESS</div>
-            <h1 class="font-arcade text-lg text-white">ADMIN GATEWAY</h1>
-            <p class="text-xs text-gray-300">Enter authorization passcode for officer command center.</p>
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md px-4">
+        <div class="bg-cardBg/90 border border-gray-800 p-8 rounded-2xl max-w-md w-full shadow-2xl backdrop-blur-xl space-y-6">
+            <div class="text-center space-y-2">
+                <span class="text-xs font-semibold tracking-wider text-blue-400 uppercase">Restricted Access</span>
+                <h1 class="text-xl font-bold tracking-tight text-white">Admin Control Center</h1>
+                <p class="text-xs text-gray-400">Enter officer credentials to manage event registrations.</p>
+            </div>
             <form onsubmit="handleLogin(event)" class="space-y-4">
-                <input type="password" id="adminPasscode" required placeholder="Enter Passcode..." class="w-full bg-arcadeDark border-2 border-arcadePink p-3 rounded text-white text-center font-fredoka focus:outline-none focus:border-arcadeYellow">
-                <button type="submit" class="w-full bg-arcadePink hover:bg-pink-600 text-white font-arcade text-xs py-3 rounded border-2 border-white shadow-neon-pink transition-all transform hover:scale-105">
-                    ACCESS SYSTEM
+                <div>
+                    <label class="block text-xs font-medium text-gray-300 mb-1">Username</label>
+                    <input type="text" id="adminUser" required placeholder="Enter username..." class="w-full bg-darkBg border border-gray-700 p-3 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-300 mb-1">Password</label>
+                    <input type="password" id="adminPass" required placeholder="Enter password..." class="w-full bg-darkBg border border-gray-700 p-3 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 transition-colors">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-3 rounded-lg shadow-lg shadow-blue-500/20 transition-all">
+                    Sign In to Dashboard
                 </button>
             </form>
-            <p class="text-[10px] text-gray-500">Hint: DIGIWISE2026!</p>
+            <div class="text-center">
+                <p class="text-[11px] text-gray-500">Demo Credentials: Username: <code class="text-gray-400">DIGIWISEPASOA</code> | Pass: <code class="text-gray-400">2026</code></p>
+            </div>
         </div>
     </div>
 
-    <!-- CUSTOM CONFIRMATION & EDIT MODALS -->
-    <div id="customModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden px-4">
-        <div class="bg-arcadePurple border-4 border-arcadeYellow p-6 rounded-xl max-w-md w-full shadow-neon-yellow text-center space-y-4">
-            <div class="font-arcade text-arcadeYellow text-xs" id="modalTitle">WARNING</div>
-            <p id="modalMessage" class="text-sm text-gray-200">Are you sure?</p>
-            <div id="modalButtons" class="flex justify-center gap-4 pt-2">
-                <button id="modalConfirmBtn" class="bg-brickRed hover:bg-red-700 text-white font-arcade text-xs py-2 px-4 rounded border">CONFIRM</button>
-                <button onclick="closeModal()" class="bg-gray-700 hover:bg-gray-600 text-white font-arcade text-xs py-2 px-4 rounded border">CANCEL</button>
+    <!-- CUSTOM CONFIRMATION MODAL -->
+    <div id="customModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden px-4">
+        <div class="bg-cardBg border border-gray-800 p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-4">
+            <h3 id="modalTitle" class="text-sm font-bold text-yellow-400 tracking-wide uppercase">System Warning</h3>
+            <p id="modalMessage" class="text-xs text-gray-300 leading-relaxed">Are you sure?</p>
+            <div id="modalButtons" class="flex justify-end gap-3 pt-2">
+                <button id="modalConfirmBtn" class="bg-red-600 hover:bg-red-500 text-white text-xs font-medium py-2 px-4 rounded-lg transition-colors">Confirm</button>
+                <button onclick="closeModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium py-2 px-4 rounded-lg transition-colors">Cancel</button>
             </div>
         </div>
     </div>
 
     <!-- EDIT RECORD MODAL -->
-    <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden px-4">
-        <div class="bg-arcadePurple border-4 border-arcadeCyan p-6 rounded-2xl max-w-lg w-full shadow-neon-cyan space-y-4">
-            <div class="font-arcade text-arcadeCyan text-xs text-center">✏️ EDIT PLAYER RECORD</div>
-            <form id="editForm" onsubmit="saveEditedRecord(event)" class="space-y-3">
+    <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden px-4">
+        <div class="bg-cardBg border border-gray-800 p-6 rounded-2xl max-w-lg w-full shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-xs font-bold text-blue-400 uppercase tracking-wide">Edit Player Record</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <form id="editForm" onsubmit="saveEditedRecord(event)" class="space-y-4">
                 <input type="hidden" id="editDocId">
                 <div>
-                    <label class="block text-[10px] font-arcade text-arcadeYellow mb-1">PLAYER NAME</label>
-                    <input type="text" id="editName" required class="w-full bg-arcadeDark border border-arcadeCyan p-2 rounded text-sm text-white">
+                    <label class="block text-[11px] font-medium text-gray-400 mb-1">PLAYER NAME</label>
+                    <input type="text" id="editName" required class="w-full bg-darkBg border border-gray-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[10px] font-arcade text-arcadePink mb-1">EMAIL</label>
-                        <input type="email" id="editEmail" required class="w-full bg-arcadeDark border border-arcadePink p-2 rounded text-sm text-white">
+                        <label class="block text-[11px] font-medium text-gray-400 mb-1">EMAIL</label>
+                        <input type="email" id="editEmail" required class="w-full bg-darkBg border border-gray-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-arcade text-arcadeYellow mb-1">PHONE</label>
-                        <input type="text" id="editPhone" required class="w-full bg-arcadeDark border border-arcadeYellow p-2 rounded text-sm text-white">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[10px] font-arcade text-arcadeCyan mb-1">STUDENT ID</label>
-                        <input type="text" id="editId" required class="w-full bg-arcadeDark border border-arcadeCyan p-2 rounded text-sm text-white">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-arcade text-arcadePink mb-1">COURSE & SECTION</label>
-                        <input type="text" id="editCourse" required class="w-full bg-arcadeDark border border-arcadePink p-2 rounded text-sm text-white">
+                        <label class="block text-[11px] font-medium text-gray-400 mb-1">PHONE</label>
+                        <input type="text" id="editPhone" required class="w-full bg-darkBg border border-gray-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500">
                     </div>
                 </div>
-                <div class="flex justify-end gap-3 pt-3">
-                    <button type="button" onclick="closeEditModal()" class="bg-gray-700 hover:bg-gray-600 text-white font-arcade text-[10px] py-2 px-4 rounded">CANCEL</button>
-                    <button type="submit" class="bg-arcadeCyan text-arcadeDark font-arcade font-bold text-[10px] py-2 px-4 rounded hover:bg-cyan-400">SAVE CHANGES</button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-400 mb-1">STUDENT ID</label>
+                        <input type="text" id="editId" required class="w-full bg-darkBg border border-gray-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-400 mb-1">COURSE & SECTION</label>
+                        <input type="text" id="editCourse" required class="w-full bg-darkBg border border-gray-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeEditModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium py-2 px-4 rounded-lg">Cancel</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium py-2 px-4 rounded-lg">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -107,63 +124,67 @@
 
     <!-- MAIN DASHBOARD CONTENT -->
     <div id="adminDashboard" class="hidden flex flex-col min-h-screen">
-        <!-- Header -->
-        <header class="bg-arcadePurple border-b-4 border-arcadePink p-4 sm:p-6 shadow-neon-pink">
+        <!-- Top Nav Bar -->
+        <header class="bg-cardBg/80 border-b border-gray-800 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-8 py-4">
             <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div>
-                    <span class="font-arcade text-arcadeCyan text-xs block mb-1">COMMAND CENTER</span>
-                    <h1 class="font-arcade text-lg sm:text-2xl text-arcadeYellow">DIGIWISE 2026 REGISTRATIONS</h1>
+                    <span class="text-[10px] font-semibold tracking-wider text-blue-400 uppercase">System Control Center</span>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">DIGIWISE 2026 Registrations</h1>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="exportToExcel()" class="bg-arcadeCyan hover:bg-cyan-400 text-arcadeDark font-arcade text-[10px] sm:text-xs px-4 py-2.5 rounded border-2 border-white shadow-neon-cyan font-bold">
-                        📊 EXPORT EXCEL
+                <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                    <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/10">
+                        <span>📊</span> Export Excel
                     </button>
-                    <button onclick="location.reload()" class="bg-brickRed hover:bg-red-700 text-white font-arcade text-[10px] sm:text-xs px-4 py-2.5 rounded border-2 border-white">
-                        LOGOUT
+                    <button onclick="location.reload()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-xs font-semibold px-4 py-2.5 rounded-lg transition-all">
+                        Logout
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- Stats Bar -->
-        <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow space-y-6">
+        <!-- Main Body -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-8 py-8 w-full flex-grow space-y-6">
+            <!-- Metrics Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="bg-arcadePurple border-2 border-arcadeCyan p-4 rounded-xl shadow-neon-cyan">
-                    <span class="font-arcade text-[10px] text-gray-400 block mb-1">TOTAL REGISTRATIONS</span>
-                    <span id="totalCount" class="font-arcade text-2xl text-arcadeYellow">0</span>
+                <div class="bg-cardBg/70 border border-gray-800 p-5 rounded-2xl backdrop-blur-md">
+                    <span class="text-[11px] font-medium text-gray-400 uppercase tracking-wider block mb-1">Total Registrations</span>
+                    <span id="totalCount" class="text-3xl font-bold text-white">0</span>
                 </div>
-                <div class="bg-arcadePurple border-2 border-arcadePink p-4 rounded-xl shadow-neon-pink">
-                    <span class="font-arcade text-[10px] text-gray-400 block mb-1">DUPLICATES FLAGGED</span>
-                    <span id="duplicateCount" class="font-arcade text-2xl text-arcadePink">0</span>
+                <div class="bg-cardBg/70 border border-gray-800 p-5 rounded-2xl backdrop-blur-md">
+                    <span class="text-[11px] font-medium text-gray-400 uppercase tracking-wider block mb-1">Duplicates Flagged</span>
+                    <span id="duplicateCount" class="text-3xl font-bold text-red-400">0</span>
                 </div>
-                <div class="bg-arcadePurple border-2 border-arcadeYellow p-4 rounded-xl shadow-neon-yellow">
-                    <span class="font-arcade text-[10px] text-gray-400 block mb-1">STATUS</span>
-                    <span class="font-arcade text-xs text-green-400">● LIVE DB SYNC</span>
+                <div class="bg-cardBg/70 border border-gray-800 p-5 rounded-2xl backdrop-blur-md">
+                    <span class="text-[11px] font-medium text-gray-400 uppercase tracking-wider block mb-1">Database Connection</span>
+                    <span class="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 mt-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live Sync Active</span>
                 </div>
             </div>
 
-            <!-- Search & Filters -->
+            <!-- Search Bar -->
             <div class="flex flex-col sm:flex-row gap-3">
-                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="🔍 Search by name, ID, course, or email..." class="w-full bg-arcadePurple border-2 border-arcadeCyan p-3 rounded text-sm text-white focus:outline-none focus:border-arcadeYellow">
+                <div class="relative w-full">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">🔍</span>
+                    <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search by name, student ID, course, or email..." class="w-full bg-cardBg/80 border border-gray-800 pl-10 pr-4 py-3 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                </div>
             </div>
 
-            <!-- Table Container -->
-            <div class="bg-arcadePurple border-4 border-arcadeYellow rounded-2xl overflow-hidden shadow-neon-yellow">
+            <!-- Table Card Container -->
+            <div class="bg-cardBg/80 border border-gray-800 rounded-2xl shadow-xl overflow-hidden backdrop-blur-md">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-arcadeDark border-b-2 border-arcadeYellow font-arcade text-[10px] text-arcadeCyan">
-                                <th class="p-4">STATUS / DUPLICATE</th>
-                                <th class="p-4">TICKET #</th>
-                                <th class="p-4">PLAYER NAME</th>
-                                <th class="p-4">CONTACT INFO</th>
-                                <th class="p-4">STUDENT ID</th>
-                                <th class="p-4">COURSE / SEC</th>
-                                <th class="p-4 text-center">ACTIONS</th>
+                            <tr class="bg-darkBg/60 border-b border-gray-800 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                                <th class="p-4">Status / Match</th>
+                                <th class="p-4">Ticket ID</th>
+                                <th class="p-4">Player Name</th>
+                                <th class="p-4">Contact Details</th>
+                                <th class="p-4">Student ID</th>
+                                <th class="p-4">Course & Section</th>
+                                <th class="p-4 text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="registrationsTableBody" class="divide-y divide-gray-700 text-xs font-fredoka">
-                            <!-- Populated dynamically via JS -->
+                        <tbody id="registrationsTableBody" class="divide-y divide-gray-800 text-xs">
+                            <!-- Dynamically populated via Firebase -->
                         </tbody>
                     </table>
                 </div>
@@ -171,12 +192,11 @@
         </main>
     </div>
 
-    <!-- Firebase SDK & Admin Logic Script -->
+    <!-- Firebase & Admin Logic Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Your exact Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyAoJ0rzgAXVf6JOVPO638EVwWOB8p61-W0",
             authDomain: "digiwise-2026.firebaseapp.com",
@@ -191,20 +211,22 @@
 
         let globalRegistrations = [];
 
-        // Admin Passcode Handler
+        // Authentication Handler
         window.handleLogin = function(e) {
             e.preventDefault();
-            const code = document.getElementById('adminPasscode').value;
-            if (code === "DIGIWISE2026!") {
+            const user = document.getElementById('adminUser').value.trim();
+            const pass = document.getElementById('adminPass').value.trim();
+
+            if (user === "DIGIWISEPASOA" && pass === "2026") {
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('adminDashboard').classList.remove('hidden');
                 loadRegistrations();
             } else {
-                alert("Incorrect passcode! Access Denied.");
+                alert("Invalid username or password credentials.");
             }
         };
 
-        // Real-time Firestore Listener
+        // Load Firestore Data Real-time
         function loadRegistrations() {
             const colRef = collection(db, "registrations");
             onSnapshot(colRef, (snapshot) => {
@@ -215,51 +237,63 @@
                 globalRegistrations = regs;
                 renderTable(regs);
             }, (error) => {
-                console.error("Error fetching Firestore data:", error);
+                console.error("Firestore sync error:", error);
             });
         }
 
-        // Render Table & Tag Duplicates
+        // Render Data Table & Advanced Duplicate Detector
         function renderTable(data) {
             const tbody = document.getElementById('registrationsTableBody');
             tbody.innerHTML = "";
 
-            document.getElementById('totalCount').innerText = data.count || data.length;
+            document.getElementById('totalCount').innerText = data.length;
 
-            // Check for duplicates by Student ID or Email
-            const idCounts = {};
+            // Advanced Multi-Field Duplicate Detector (Checks Student ID & Email matches)
+            const idMap = {};
+            const emailMap = {};
+
             data.forEach(item => {
-                const key = (item.studentID || "").trim().toLowerCase();
-                if (key) idCounts[key] = (idCounts[key] || 0) + 1;
+                const sId = (item.studentID || "").trim().toLowerCase();
+                const email = (item.playerEmail || "").trim().toLowerCase();
+                if (sId) idMap[sId] = (idMap[sId] || 0) + 1;
+                if (email) emailMap[email] = (emailMap[email] || 0) + 1;
             });
 
             let duplicateCounter = 0;
 
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400 font-arcade text-xs">NO REGISTRATIONS FOUND IN DATABASE YET.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-500 text-xs">No registrations found in database.</td></tr>`;
                 document.getElementById('duplicateCount').innerText = "0";
                 return;
             }
 
             data.forEach((reg) => {
-                const studentKey = (reg.studentID || "").trim().toLowerCase();
-                const isDuplicate = studentKey && idCounts[studentKey] > 1;
+                const sId = (reg.studentID || "").trim().toLowerCase();
+                const email = (reg.playerEmail || "").trim().toLowerCase();
+                
+                const isDuplicateID = sId && idMap[sId] > 1;
+                const isDuplicateEmail = email && emailMap[email] > 1;
+                const isDuplicate = isDuplicateID || isDuplicateEmail;
+
                 if (isDuplicate) duplicateCounter++;
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-purple-900/40 transition-colors";
+                tr.className = "hover:bg-gray-800/40 transition-colors";
                 tr.innerHTML = `
                     <td class="p-4">
-                        ${isDuplicate ? '<span class="bg-brickRed text-white text-[9px] font-arcade px-2 py-1 rounded border border-yellow-300 animate-pulse">⚠️ DUPLICATE</span>' : '<span class="text-green-400 text-[10px] font-arcade">UNIQUE ✓</span>'}
+                        ${isDuplicate ? '<span class="bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-semibold px-2.5 py-1 rounded-md inline-flex items-center gap-1">⚠️ Duplicate</span>' : '<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold px-2.5 py-1 rounded-md">Unique</span>'}
                     </td>
-                    <td class="p-4 font-arcade text-arcadeYellow text-[10px]">${reg.ticketNumber || 'N/A'}</td>
-                    <td class="p-4 font-semibold text-white">${reg.playerName || 'Unnamed'}</td>
-                    <td class="p-4 text-gray-300 text-xs">${reg.playerEmail || 'N/A'}<br><span class="text-gray-500 text-[10px]">${reg.playerPhone || ''}</span></td>
-                    <td class="p-4 text-arcadeCyan font-mono">${reg.studentID || 'N/A'}</td>
-                    <td class="p-4 text-gray-200">${reg.courseAndSection || 'N/A'}</td>
+                    <td class="p-4 font-mono text-amber-400 text-xs font-medium">${reg.ticketNumber || 'N/A'}</td>
+                    <td class="p-4 font-medium text-white">${reg.playerName || 'Unnamed'}</td>
+                    <td class="p-4 text-gray-300">
+                        <div>${reg.playerEmail || 'N/A'}</div>
+                        <div class="text-[11px] text-gray-500">${reg.playerPhone || ''}</div>
+                    </td>
+                    <td class="p-4 font-mono text-blue-400">${reg.studentID || 'N/A'}</td>
+                    <td class="p-4 text-gray-300">${reg.courseAndSection || 'N/A'}</td>
                     <td class="p-4 text-center space-x-2 whitespace-nowrap">
-                        <button onclick="openEditModal('${reg.id}', '${escapeAttr(reg.playerName)}', '${escapeAttr(reg.playerEmail)}', '${escapeAttr(reg.playerPhone)}', '${escapeAttr(reg.studentID)}', '${escapeAttr(reg.courseAndSection)}')" class="bg-arcadeCyan text-arcadeDark font-arcade text-[9px] px-2.5 py-1.5 rounded hover:bg-cyan-300 font-bold">EDIT</button>
-                        <button onclick="confirmDelete('${reg.id}', '${escapeAttr(reg.playerName)}')" class="bg-brickRed text-white font-arcade text-[9px] px-2.5 py-1.5 rounded hover:bg-red-700">DELETE</button>
+                        <button onclick="openEditModal('${reg.id}', '${escapeAttr(reg.playerName)}', '${escapeAttr(reg.playerEmail)}', '${escapeAttr(reg.playerPhone)}', '${escapeAttr(reg.studentID)}', '${escapeAttr(reg.courseAndSection)}')" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 text-[11px] font-medium px-3 py-1.5 rounded-lg transition-colors">Edit</button>
+                        <button onclick="confirmDelete('${reg.id}', '${escapeAttr(reg.playerName)}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-[11px] font-medium px-3 py-1.5 rounded-lg transition-colors">Delete</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -268,12 +302,11 @@
             document.getElementById('duplicateCount').innerText = duplicateCounter;
         }
 
-        // Helper to escape attributes in HTML strings
         function escapeAttr(str) {
             return (str || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;");
         }
 
-        // Search Filter
+        // Live Search Filter
         window.filterTable = function() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const filtered = globalRegistrations.filter(r => 
@@ -285,7 +318,7 @@
             renderTable(filtered);
         };
 
-        // --- EDIT MODAL FUNCTIONS ---
+        // Edit Controls
         window.openEditModal = function(id, name, email, phone, studentID, course) {
             document.getElementById('editDocId').value = id;
             document.getElementById('editName').value = name;
@@ -314,26 +347,26 @@
             try {
                 await updateDoc(doc(db, "registrations", docId), updatedData);
                 closeEditModal();
-                showSystemAlert("SUCCESS", "Record updated successfully!");
+                showSystemAlert("Success", "Player record updated successfully.");
             } catch (err) {
-                console.error("Error updating record:", err);
+                console.error("Update error:", err);
                 alert("Failed to update record: " + err.message);
             }
         };
 
-        // --- DELETE WITH WARNING MODAL ---
+        // Delete with Warning
         window.confirmDelete = function(docId, playerName) {
-            document.getElementById('modalTitle').innerText = "⚠️ DANGER: DELETE RECORD";
-            document.getElementById('modalMessage').innerHTML = `Are you sure you want to delete registration for <strong class="text-arcadeYellow">${playerName}</strong>? This action cannot be undone.`;
+            document.getElementById('modalTitle').innerText = "⚠️ Confirm Deletion";
+            document.getElementById('modalMessage').innerHTML = `Are you sure you want to permanently delete registration for <strong class="text-white">${playerName}</strong>? This action cannot be undone.`;
             
             const confirmBtn = document.getElementById('modalConfirmBtn');
             confirmBtn.onclick = async function() {
                 try {
                     await deleteDoc(doc(db, "registrations", docId));
                     closeModal();
-                    showSystemAlert("DELETED", "Player record has been removed from database.");
+                    showSystemAlert("Deleted", "Player record has been removed.");
                 } catch (err) {
-                    console.error("Error deleting document:", err);
+                    console.error("Delete error:", err);
                     alert("Failed to delete: " + err.message);
                 }
             };
@@ -347,18 +380,17 @@
         function showSystemAlert(title, message) {
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalMessage').innerText = message;
-            document.getElementById('modalButtons').innerHTML = `<button onclick="closeModal()" class="bg-arcadeCyan text-arcadeDark font-arcade text-xs py-2 px-6 rounded font-bold">OK</button>`;
+            document.getElementById('modalButtons').innerHTML = `<button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium py-2 px-4 rounded-lg">OK</button>`;
             document.getElementById('customModal').classList.remove('hidden');
         }
 
-        // --- EXCEL EXPORT ---
+        // Excel Export Utility
         window.exportToExcel = function() {
             if (globalRegistrations.length === 0) {
-                alert("No data available to export!");
+                alert("No registration data available to export.");
                 return;
             }
 
-            // Map data for clean spreadsheet output
             const exportData = globalRegistrations.map((r, index) => ({
                 "No.": index + 1,
                 "Ticket Number": r.ticketNumber || "",
@@ -373,8 +405,6 @@
             const worksheet = XLSX.utils.json_to_sheet(exportData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
-
-            // Trigger file download
             XLSX.writeFile(workbook, "Digiwise_2026_Registrations.xlsx");
         };
     </script>
